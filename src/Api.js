@@ -8,3 +8,8 @@ export const getPersons = async () => {
 export const createPerson = (newPerson) => {
   return axios.post("http://localhost:3001/persons", newPerson);
 };
+
+export const deletePerson = async (id) => {
+  const response = await axios.delete(`http://localhost:3001/persons/${id}`);
+  return response;
+};
