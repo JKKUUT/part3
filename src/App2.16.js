@@ -45,7 +45,7 @@ const AllPerson = ({ persons }) => {
 const OnePerson = ({ person }) => {
   const poisto = (id) => {
     if (window.confirm(`Delete ${person.name}?`)) {
-      deletePerson(id);
+      deletePerson(id).then(window.location.reload());
     }
   };
   return (
@@ -65,7 +65,7 @@ const Notification = ({ message }) => {
 };
 
 const App = () => {
-  const [persons, setPersons] = useState([{ name: "", number: "" }]);
+  const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [notification, setNotification] = useState(null);
@@ -80,8 +80,9 @@ const App = () => {
     }
 
     createPerson({ name: newName, number: newNumber }).then((res) => {
-      if (res.status === 201) {
+      if (res.status === 200) {
         setNotification(`Added ${newName}`);
+        setPersons(persons.concat(res.data));
         setTimeout(() => {
           setNotification(null);
         }, 5000);
@@ -97,7 +98,7 @@ const App = () => {
       setPersons(response.data);
     };
     getData();
-  }, [submitti]);
+  }, []);
 
   return (
     <div>

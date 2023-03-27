@@ -2,7 +2,6 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cors = require("cors");
-const Person = require("./mongodongo");
 
 app.use(express.static("build"));
 app.use(cors());
@@ -35,9 +34,7 @@ let persons = [
 //3.1
 
 app.get("/api/persons", (req, res) => {
-  Person.find({}).then((persons) => {
-    res.json(persons);
-  });
+  res.json(persons);
 });
 
 //3.2
@@ -50,36 +47,25 @@ app.get("/info", (req, res) => {
 
 //3.3
 
-app.get("/api/persons/:id", (req, res, next) => {
-  const id = req.params.id;
-  Person.findById(id)
-    .then((person) => {
-      if (person) {
-        res.json(person);
-      } else {
-        res.status(404).end();
-      }
-    })
-    .catch((error) => {
-      next(error);
-    });
+app.get("/api/persons/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const person = persons.find((person) => person.id === id);
+  if (person) {
+    res.json(person);
+  } else {
+    res.status(404).end();
+  }
 });
 
 //3.4
 
-app.delete("/api/persons/:id", (req, res, next) => {
-  const id = req.params.id;
+app.delete("/api/persons/:id", (req, res) => {
+  const id = Number(req.params.id);
   persons = persons.filter((p) => p.id !== id);
-  Person.findByIdAndRemove(id)
-    .then(() => {
-      res.status(204).end();
-    })
-    .catch((error) => {
-      next(error);
-    });
+  res.status(204).end();
 });
 
-app.post("/api/persons", (req, res, next) => {
+app.post("/api/persons", (req, res) => {
   const body = req.body;
   if (!body.name || !body.number) {
     return res.status(400).json({ error: "name or number missing" });
@@ -87,28 +73,14 @@ app.post("/api/persons", (req, res, next) => {
   if (persons.some((p) => p.name === body.name)) {
     return res.status(400).json({ error: "name must be unique" });
   }
-  const person = new Person({
+  const person = {
+    id: Math.floor(Math.random() * 97645),
     name: body.name,
     number: body.number,
-  });
-  person
-    .save()
-    .then((savedPerson) => {
-      persons.concat(savedPerson);
-    })
-    .catch((error) => next(error));
+  };
+  persons = persons.concat(person);
   res.json(person);
 });
-
-const errorHandler = (error, request, response, next) => {
-  console.error(error.message);
-  if (error.name === "CastError") {
-    return response.status(400).send({ error: "malformatted id" });
-  }
-  next(error);
-};
-
-app.use(errorHandler);
 
 const PORT = 3001;
 app.listen(PORT, () => {
